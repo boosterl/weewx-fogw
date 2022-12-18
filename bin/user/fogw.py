@@ -92,7 +92,7 @@ class FoGWDriver(weewx.drivers.AbstractDevice):
                     if self.OBSERVATION_MAP.get(observation["id"]) == 'rain_total':
                         newtot = self.format_value(observation["val"])
                         _packet['rain'] = self._delta_rain(newtot, self._last_rain)
-                        self._last_rain = new_tot
+                        self._last_rain = newtot
                     else:
                         _packet[self.OBSERVATION_MAP.get(observation["id"])] = self.format_value(observation["val"])
             for wh25_values in weather_data["wh25"]:
