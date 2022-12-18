@@ -34,15 +34,6 @@ DRIVER_VERSION = "0.1"
 
 log = logging.getLogger(__name__)
 
-def _get_as_float(d, s):
-    v = None
-    if s in d:
-        try:
-            v = float(d[s])
-        except ValueError as e:
-            log.error("cannot read value for '%s': %s" % (s, e))
-    return v
-
 def loader(config_dict, engine):
     return FoGWDriver(**config_dict[DRIVER_NAME])
 
