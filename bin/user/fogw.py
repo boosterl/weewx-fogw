@@ -107,10 +107,10 @@ class FoGWDriver(weewx.drivers.AbstractDevice):
 
     def _delta_rain(self, rain, last_rain):
         if last_rain is None:
-            log.inf("skipping rain measurement of %s: no last rain" % rain)
+            log.info("skipping rain measurement of %s: no last rain" % rain)
             return None
         if rain < last_rain:
-            log.inf("rain counter wraparound detected: new=%s last=%s" %
+            log.info("rain counter wraparound detected: new=%s last=%s" %
                    (rain, last_rain))
             return rain
         return rain - last_rain
