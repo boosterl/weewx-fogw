@@ -88,8 +88,8 @@ class FoGWDriver(weewx.drivers.AbstractDevice):
                     _packet[self.OBSERVATION_MAP.get(observation["id"])] = self.format_value(observation["val"])
             for observation in weather_data["rain"]:
                 if observation["id"] in self.OBSERVATION_MAP:
-                    if observation["id"] == 'rain_total':
-                        newtot = pkt['rain_total']
+                    if self.OBSERVATION_MAP.get(observation["id"]) == 'rain_total':
+                        newtot = self.format_value(observation["val"])
                         _packet['rain'] = self._delta_rain(newtot, self._last_rain)
                         self._last_rain = new_tot
             for wh25_values in weather_data["wh25"]:
@@ -104,10 +104,10 @@ class FoGWDriver(weewx.drivers.AbstractDevice):
 
     def _delta_rain(self, rain, last_rain):
         if last_rain is None:
-            loginf("skipping rain measurement of %s: no last rain" % rain)
+            log.inf("skipping rain measurement of %s: no last rain" % rain)
             return None
         if rain < last_rain:
-            loginf("rain counter wraparound detected: new=%s last=%s" %
+            log.inf("rain counter wraparound detected: new=%s last=%s" %
                    (rain, last_rain))
             return rain
         return rain - last_rain
