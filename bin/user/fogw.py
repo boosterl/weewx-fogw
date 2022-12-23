@@ -81,24 +81,27 @@ class FoGWDriver(weewx.drivers.AbstractDevice):
             _packet = {'dateTime': int(time.time() + 0.5),
                        'usUnits': weewx.METRICWX}
 
-            weather_data = requests.get(f"http://{self.gateway_host}/get_livedata_info").json()
-            for observation in weather_data["common_list"]:
-                if observation["id"] in self.OBSERVATION_MAP and observation["id"] in self.WIND_MEASUREMENTS:
-                    _packet[self.OBSERVATION_MAP.get(observation["id"])] = self.format_value(observation["val"]) / 3.6
-                elif observation["id"] in self.OBSERVATION_MAP:
-                    _packet[self.OBSERVATION_MAP.get(observation["id"])] = self.format_value(observation["val"])
-            for observation in weather_data["rain"]:
-                if observation["id"] in self.OBSERVATION_MAP:
-                    if self.OBSERVATION_MAP.get(observation["id"]) == 'rain_total':
-                        newtot = self.format_value(observation["val"])
-                        _packet['rain'] = self._delta_rain(newtot, self._last_rain)
-                        self._last_rain = newtot
-                    else:
+            try:
+                weather_data = requests.get(f"http://{self.gateway_host}/get_livedata_info").json()
+                for observation in weather_data["common_list"]:
+                    if observation["id"] in self.OBSERVATION_MAP and observation["id"] in self.WIND_MEASUREMENTS:
+                        _packet[self.OBSERVATION_MAP.get(observation["id"])] = self.format_value(observation["val"]) / 3.6
+                    elif observation["id"] in self.OBSERVATION_MAP:
                         _packet[self.OBSERVATION_MAP.get(observation["id"])] = self.format_value(observation["val"])
-            for wh25_values in weather_data["wh25"]:
-                for wh25_id, wh25_value in wh25_values.items():
-                    if wh25_id in self.WH25_MAP:
-                        _packet[self.WH25_MAP.get(wh25_id)] = self.format_value(wh25_value)
+                for observation in weather_data["rain"]:
+                    if observation["id"] in self.OBSERVATION_MAP:
+                        if self.OBSERVATION_MAP.get(observation["id"]) == 'rain_total':
+                            newtot = self.format_value(observation["val"])
+                            _packet['rain'] = self._delta_rain(newtot, self._last_rain)
+                            self._last_rain = newtot
+                        else:
+                            _packet[self.OBSERVATION_MAP.get(observation["id"])] = self.format_value(observation["val"])
+                for wh25_values in weather_data["wh25"]:
+                    for wh25_id, wh25_value in wh25_values.items():
+                        if wh25_id in self.WH25_MAP:
+                            _packet[self.WH25_MAP.get(wh25_id)] = self.format_value(wh25_value)
+            except requests.exceptions.RequestException as e:
+                log.error("Error executing request to gateway %s" % e)
             yield _packet
             time.sleep(self.poll_interval)
 
