@@ -233,8 +233,16 @@ class FoGWDriver(weewx.drivers.AbstractDevice):
             unit_info = requests.get(f"http://{self.gateway_host}/get_units_info").json()
             for conversion in self.CONVERSION_MAP:
                 for observation_id in conversion["ids"]:
-                    if configured_unit :=  conversion["conversion_map"].get(unit_info[conversion["observation_type"]]):
-                        self.UNIT_MAP_SOURCE[observation_id][0] = configured_unit
+                    if configured_unit := conversion["conversion_map"].get(unit_info[conversion["observation_type"]]):
+                        if self.UNIT_MAP_SOURCE[observation_id][0] != configured_unit:
+                            log.info("Units for %s will be converted from %s to %s" %
+                            (
+                                conversion["observation_type"],
+                                configured_unit,
+                                self.UNIT_MAP_DESTINATION[observation_id]
+                            ))
+                            self.UNIT_MAP_SOURCE[observation_id][0] = configured_unit
+                            self._last_rain = None
                     else:
                         log.error("Unit for %s is not known, bogus values may appear" % conversion["observation_alias"])
         except requests.exceptions.RequestException as e:
