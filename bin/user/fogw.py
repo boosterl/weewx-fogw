@@ -207,7 +207,9 @@ class FoGWDriver(weewx.drivers.AbstractDevice):
                             _packet['rain'] = self._delta_rain(newtot, self._last_rain)
                             self._last_rain = newtot
                         else:
-                            _packet[self.OBSERVATION_MAP.get(observation["id"])] = self.format_value(observation["val"])
+                            _packet[self.OBSERVATION_MAP.get(observation["id"])] = self.convert_value(
+                                observation["id"],
+                                self.format_value(observation["val"]))
                 for wh25_values in weather_data["wh25"]:
                     for wh25_id, wh25_value in wh25_values.items():
                         if wh25_id in self.WH25_MAP:
