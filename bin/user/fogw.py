@@ -219,11 +219,11 @@ class FoGWDriver(weewx.drivers.AbstractDevice):
             yield _packet
             time.sleep(self.poll_interval)
 
-    def convert_value(self, observation_type, observation_value):
-        if observation_type in self.UNIT_MAP_SOURCE and observation_type in self.UNIT_MAP_DESTINATION:
+    def convert_value(self, observation_id, observation_value):
+        if observation_id in self.UNIT_MAP_SOURCE and observation_id in self.UNIT_MAP_DESTINATION:
             return weewx.units.convert(
-                (observation_value, self.UNIT_MAP_SOURCE[observation_type][0], self.UNIT_MAP_SOURCE[observation_type][0]),
-                self.UNIT_MAP_DESTINATION[observation_type]
+                (observation_value, self.UNIT_MAP_SOURCE[observation_id][0], self.UNIT_MAP_SOURCE[observation_id][0]),
+                self.UNIT_MAP_DESTINATION[observation_id]
             )[0]
         return observation_value
 
