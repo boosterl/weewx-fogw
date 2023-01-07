@@ -41,6 +41,16 @@ def loader(config_dict, engine):
 class FoGWDriver(weewx.drivers.AbstractDevice):
     """weewx driver that reads data from fine offset gateways"""
 
+    BATTERY_MAP = {
+        "0": 0,
+        "1": 1,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0,
+        "6": 0,
+    }
+
     OBSERVATION_MAP = {
         "0x02": "outTemp",
         "0x07": "outHumidity",
@@ -140,6 +150,14 @@ class FoGWDriver(weewx.drivers.AbstractDevice):
         },
     ]
 
+    SIGNAL_STRENGTH_MAP = {
+        "0": 0,
+        "1": 25,
+        "2": 50,
+        "3": 75,
+        "4": 100,
+    }
+
     UNIT_MAP_DESTINATION = {
         "0x02": "degree_C",
         "0x03": "degree_C",
@@ -214,10 +232,26 @@ class FoGWDriver(weewx.drivers.AbstractDevice):
                     for wh25_id, wh25_value in wh25_values.items():
                         if wh25_id in self.WH25_MAP:
                             _packet[self.WH25_MAP.get(wh25_id)] = self.convert_value(wh25_id, self.format_value(wh25_value))
+                for status_type, status_value in self.check_sensor_status().items():
+                    _packet[status_type] = status_value
             except requests.exceptions.RequestException as e:
                 log.error("Error executing request to gateway %s" % e)
             yield _packet
             time.sleep(self.poll_interval)
+
+    def check_sensor_status(self):
+        sensor_status = dict()
+        try:
+            sensors1 = requests.get(f"http://{self.gateway_host}/get_sensors_info?page=1").json()
+            sensors2 = requests.get(f"http://{self.gateway_host}/get_sensors_info?page=2").json()
+            for sensor in sensors1 + sensors2:
+                if sensor["id"] != "FFFFFFFF" and sensor["id"] != "FFFFFFFE":
+                    sensor_status["rxCheckPercent"] = self.SIGNAL_STRENGTH_MAP[sensor["signal"]]
+                    sensor_status["txBatteryStatus"] = self.BATTERY_MAP[sensor["batt"]]
+                    break
+        except requests.exceptions.RequestException as e:
+            log.error("Error executing request to gateway %s" % e)
+        return sensor_status
 
     def convert_value(self, observation_id, observation_value):
         if observation_id in self.UNIT_MAP_SOURCE and observation_id in self.UNIT_MAP_DESTINATION:
