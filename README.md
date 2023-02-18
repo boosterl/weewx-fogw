@@ -36,8 +36,8 @@ sudo systemctl restart weewx
 ## Why would you use this driver while the awesome [weewx-interceptor](https://github.com/matthewwall/weewx-interceptor) driver is already available? 
 
 The Fine Offset WiFi gateways only allows to push weather data to one endpoint.
-Using this driver, multiple weewx installations can query fetch the same data.
-Handy if you have a test weewx-installation for example.
+Using this driver, multiple weewx installations can fetch the same data from one
+gateway. Handy if you have a weewx-installation used for testing, for example.
 
 ## Which weather stations are supported?
 
