@@ -284,7 +284,8 @@ class FoGWDriver(weewx.drivers.AbstractDevice):
         except requests.exceptions.RequestException as e:
             log.error("Error executing request to gateway %s" % e)
 
-    def _delta_rain(self, rain, last_rain):
+    @staticmethod
+    def _delta_rain(rain, last_rain):
         if last_rain is None:
             log.info("skipping rain measurement of %s: no last rain" % rain)
             return None
