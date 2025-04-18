@@ -16,13 +16,13 @@ sudo pip install requests
 Then you can clone the repo and run the installer:
 
 ```
-sudo wee_extension --install weewx-fogw
+weectl extension install weewx-fogw
 ```
 
 You can then configure the driver:
 
 ```
-sudo wee_config --reconfigure --driver=user.fogw --no-prompt
+weectl station reconfigure --driver=user.fogw --no-prompt
 ```
 
 Lastly, restart WeeWX:
