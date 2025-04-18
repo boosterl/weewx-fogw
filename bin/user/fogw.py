@@ -184,6 +184,7 @@ class FoGWDriver(weewx.drivers.AbstractDevice):
         "0x10": ["mm", "group_rain"],
         "0x0E": ["mm_per_hour", "group_rainrate"],
         "0x15": ["watt_per_meter_squared", "group_radiation"],
+        "distance": ["km", "group_distance"],
     }
 
     WH25_MAP = {
@@ -192,12 +193,23 @@ class FoGWDriver(weewx.drivers.AbstractDevice):
         "abs": "pressure",
     }
 
+    LIGHTNING_MAP = {
+        "distance": "lightning_distance",
+        "count": "lightning_strike_count",
+    }
+
+    CH_AISLE_MAP = {
+        "temp": "outTemp",
+        "humidity": "outHumidity",
+    }
+
     def __init__(self, **stn_dict):
         # where to find the gateway
         self.gateway_host = stn_dict.get('gateway_host', '192.168.0.2')
         # how often to poll the gateway, seconds
         self.poll_interval = float(stn_dict.get('poll_interval', 30))
         self._last_rain = None
+        self._last_strikes = None
 
         log.info("Gateway is %s" % self.gateway_host)
         log.info("Polling interval is %s" % self.poll_interval)
@@ -232,6 +244,19 @@ class FoGWDriver(weewx.drivers.AbstractDevice):
                     for wh25_id, wh25_value in wh25_values.items():
                         if wh25_id in self.WH25_MAP:
                             _packet[self.WH25_MAP.get(wh25_id)] = self.convert_value(wh25_id, self.format_value(wh25_value))
+                for lightning_values in weather_data.get("lightning", list()):
+                    lightning_strike_count = lightning_values.get("count")
+                    lightning_distance = lightning_values.get("distance")
+                    newtot = self.format_value(lightning_strike_count)
+                    delta_value = self._delta_strikes(newtot, self._last_strikes)
+                    _packet[self.LIGHTNING_MAP.get("count")] = delta_value
+                    self._last_strikes = newtot
+                    if delta_value and lightning_distance != "--.-":
+                        _packet[self.LIGHTNING_MAP.get("distance")] = self.convert_value("distance", self.format_value(lightning_distance))
+                for ch_aisle_values in weather_data.get("ch_aisle", list()):
+                    for ch_aisle_id, ch_aisle_value in ch_aisle_values.items():
+                        if ch_aisle_id in self.CH_AISLE_MAP:
+                            _packet[self.CH_AISLE_MAP.get(ch_aisle_id)] = self.convert_value(ch_aisle_id, self.format_value(ch_aisle_value))
                 for status_type, status_value in self.check_sensor_status().items():
                     _packet[status_type] = status_value
             except requests.exceptions.RequestException as e:
@@ -294,6 +319,19 @@ class FoGWDriver(weewx.drivers.AbstractDevice):
                    (rain, last_rain))
             return rain
         return rain - last_rain
+
+    @staticmethod
+    def _delta_strikes(strikes, last_strikes):
+        if strikes is None:
+            return None
+        if last_strikes is None:
+            log.info("skipping lightning strikes measurement of %s: no last strikes" % strikes)
+            return None
+        if strikes < last_strikes:
+            log.info("lightning strikes wraparound detected: new=%s last=%s" %
+                   (strikes, last_strikes))
+            return strikes
+        return strikes - last_strikes
 
     @property
     def hardware_name(self):
