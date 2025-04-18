@@ -213,12 +213,12 @@ class FoGWDriver(weewx.drivers.AbstractDevice):
 
             try:
                 weather_data = requests.get(f"http://{self.gateway_host}/get_livedata_info").json()
-                for observation in weather_data["common_list"]:
+                for observation in weather_data.get("common_list", list()):
                     if observation["id"] in self.OBSERVATION_MAP:
                         _packet[self.OBSERVATION_MAP.get(observation["id"])] = self.convert_value(
                             observation["id"],
                             self.format_value(observation["val"]))
-                for observation in weather_data["rain"]:
+                for observation in weather_data.get("rain", list()):
                     if observation["id"] in self.OBSERVATION_MAP:
                         if self.OBSERVATION_MAP.get(observation["id"]) == 'rain_total':
                             newtot = self.convert_value(observation["id"], self.format_value(observation["val"]))
@@ -228,7 +228,7 @@ class FoGWDriver(weewx.drivers.AbstractDevice):
                             _packet[self.OBSERVATION_MAP.get(observation["id"])] = self.convert_value(
                                 observation["id"],
                                 self.format_value(observation["val"]))
-                for wh25_values in weather_data["wh25"]:
+                for wh25_values in weather_data.get("wh25", list()):
                     for wh25_id, wh25_value in wh25_values.items():
                         if wh25_id in self.WH25_MAP:
                             _packet[self.WH25_MAP.get(wh25_id)] = self.convert_value(wh25_id, self.format_value(wh25_value))
