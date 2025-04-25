@@ -1,3 +1,9 @@
+# ⚠ DEPRECATION NOTICE ⚠
+
+The [weewx-gw1000](https://github.com/gjr80/weewx-gw1000) driver does the same
+thing as this driver, and much more. So no need for continueing development on
+this driver anymore.
+
 # WeeWX FoGW
 
 This is a driver for WeeWX that fetches data from Fine Offset WiFi gateways.
